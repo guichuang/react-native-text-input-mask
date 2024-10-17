@@ -1,0 +1,11 @@
+{
+  "module": {
+    "name": "text_input_mask",
+    "type": "har",
+    "deviceTypes": [
+      "default",
+      "tablet",
+      "2in1"
+    ]
+  }
+}

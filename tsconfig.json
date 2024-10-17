@@ -36,5 +36,8 @@
     /* Other Options */
     "allowUnreachableCode": false /* Do not report errors on unreachable code. */,
     "skipLibCheck": true /* https://github.com/DefinitelyTyped/DefinitelyTyped/issues/24573 */
-  }
+   
+  },
+ // "included":["src/"],
+  //"exclude":["node_modules","dist"]
 }

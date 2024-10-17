@@ -1,115 +1,22 @@
-import React, {
-  DependencyList,
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState
-} from 'react'
+import type { TurboModule } from "react-native/Libraries/TurboModule/RCTExport";
+import { TurboModuleRegistry} from "react-native";
 
-import { findNodeHandle, Platform, TextInput, TextInputProps } from 'react-native'
-import exportMasker from './src/index'
-export const mask = exportMasker.mask
-export const unmask = exportMasker.unmask
-export const setMask = exportMasker.setMask
-const TextInputMask = forwardRef<Handles, TextInputMaskProps>(({
-    mask: primaryFormat,
-    defaultValue,
-    value ,
-    multiline,
-    onChangeText,
-    affineFormats,
-    customNotations,
-    affinityCalculationStrategy,
-    autocomplete= true,
-    autoskip = true,
-    rightToLeft,
-    ...rest
-}, ref) => {
-  const input = useRef<TextInput>(null)
-  const [ maskedValue, setMaskedValue ] = useState<string>()
+export interface MaskOptions {
+    affineFormats?: string[]
+    customNotations?: Notation[]
+    affinityCalculationStrategy?: AffinityCalculationStrategy
+    /**
+     * autocomplete pattern while editing text
+     */
+    autocomplete?: boolean
+    /**
+     * automatically remove mask characters on backspace
+     */
+    autoskip?: boolean
+    rightToLeft?: boolean
+  }
 
-  useEffectAsync(async () => {
-    const initialValue = value ?? defaultValue
-    if (!initialValue) return
-    if (primaryFormat) {
-      const masked = await mask(primaryFormat, initialValue, false)
-      setMaskedValue(masked)
-    } else {
-      setMaskedValue(initialValue)
-    }
-  }, [])
-
-  useEffectAsync(async () => {
-    if (value === maskedValue) return
-    if (primaryFormat && value) {
-      const masked = await mask(primaryFormat, value, false)
-      setMaskedValue(masked)
-    } else {
-      setMaskedValue(value)
-    }
-  }, [value])
-
-  useEffect(() => {
-    const nodeId = findNodeHandle(input.current)
-    if (primaryFormat && nodeId) {
-      setMask(nodeId, primaryFormat, { affineFormats, affinityCalculationStrategy, customNotations, autocomplete, autoskip, rightToLeft })
-    }
-  }, [primaryFormat])
-
-  useImperativeHandle(ref, () => ({
-    focus: () => {
-      input.current?.focus()
-    },
-    blur: () => {
-      input.current?.blur()
-    }
-  }))
-
-  return (
-      <TextInput
-          {...rest}
-          ref={input}
-          value={maskedValue}
-          multiline={primaryFormat && Platform.OS === 'ios' ? false : multiline}
-          onChangeText={async (masked) => {
-            setMaskedValue(masked)
-            if (primaryFormat) {
-              const unmasked = await unmask(primaryFormat, masked, true)
-              onChangeText?.(masked, unmasked)
-            } else {
-              onChangeText?.(masked)
-            }
-          }}
-      />
-  )
-})
-
-export const useEffectAsync = (
-    operation: () => Promise<void>,
-    deps?: DependencyList
-) => {
-  useEffect(() => {
-    operation().then()
-  }, deps)
-}
-
-interface MaskOptions {
-  affineFormats?: string[]
-  customNotations?: Notation[]
-  affinityCalculationStrategy?: AffinityCalculationStrategy
-  /**
-   * autocomplete pattern while editing text
-   */
-  autocomplete?: boolean
-  /**
-   * automatically remove mask characters on backspace
-   */
-  autoskip?: boolean
-  rightToLeft?: boolean
-}
-
-type AffinityCalculationStrategy =
+  export type AffinityCalculationStrategy =
 /**
  * Default strategy.
  *
@@ -220,14 +127,10 @@ interface Notation {
   isOptional: boolean
 }
 
-export interface TextInputMaskProps extends TextInputProps, MaskOptions{
-  mask?: string
-  onChangeText?: (formatted: string, extracted?: string) => void
+export interface Spec extends TurboModule {
+    mask (mask: string, value: string, autocomplete: boolean) :Promise<string>, 
+    unmask (mask: string, value: string, autocomplete: boolean): Promise<string>, 
+    setMask (reactNode: number, primaryFormat: string, options?: MaskOptions): void;
 }
 
-interface Handles {
-  focus: () => void
-  blur: () => void
-}
-
-export default TextInputMask
+export default TurboModuleRegistry.get<Spec>('RNTextInputMask') as Spec ;
