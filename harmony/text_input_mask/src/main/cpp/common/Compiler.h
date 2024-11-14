@@ -1,3 +1,26 @@
+/**
+ * MIT License
+ *
+ * Copyright (C) 2024 Huawei Device Co., Ltd.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 #pragma once
 #include <string>
 #include <vector>
@@ -105,23 +128,19 @@ public:
     }
 
     std::unique_ptr<State> compileWithCustomNotations(char c, const std::string &str) {
-         DLOG(ERROR) << "====== compileWithCustomNotations  customNotations size: " << customNotations.size();
         for (const auto &customNotation : customNotations) {
             if (customNotation.character == c) {
                 std::shared_ptr<State> compiledState = compile(str.substr(1), true, false, c);
                 if (customNotation.isOptional) {
-                    DLOG(ERROR) << "====== compileWithCustomNotations  customNotations isOptional :" << customNotation.isOptional;
                     return std::make_unique<OptionalValueState>(
                         std::move(compiledState),
                         std::make_shared<OptionalValueState::Custom>(c, customNotation.characterSet));
                 } else {
-                     DLOG(ERROR) << "======= compileWithCustomNotations  customNotations isOptional :" << customNotation.isOptional;
                     return std::make_unique<ValueState>(
                         std::move(compiledState), std::make_shared<ValueState::Custom>(c, customNotation.characterSet));
                 }
             }
         }
-        DLOG(INFO) << "compileWithCustomNotations No Match Found ";
         throw FormatError("compileWithCustomNotations No Match Found");
     }
     std::shared_ptr<ValueState::ValueStateType> determineInheritedType(std::optional<char> lastCharacter) {
@@ -153,7 +172,6 @@ public:
         if (!lastCharacter.has_value()) {
             throw FormatError(); // 处理空字符情况，抛出异常
         }
-         DLOG(INFO) << "======determineTypeWithCustomNotations customNotations size: "<<customNotations.size();
         char character = lastCharacter.value();
         for (const auto &customNotation : customNotations) {
             if (customNotation.character == character) {
@@ -162,7 +180,6 @@ public:
                                                             customNotation.characterSet); // 可以根据需要调整返回内容
             }
         }
-        DLOG(INFO) << "determineTypeWithCustomNotations No Match Found ";
         throw FormatError("determineTypeWithCustomNotations No Match Found"); // 未找到匹配项，抛出异常
     }
 };
